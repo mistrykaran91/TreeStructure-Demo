@@ -30,12 +30,10 @@ export class HomeComponent implements OnInit {
     //
     // Create tree
     //
-    // var t = new this.Treeview(schema, 'tree');
     const source = new TreeView(schema.sourceNode, 'source')
     const destination = new TreeView(schema.destinationNode, 'destination')
   }
 
-  //buildStructure(obj: any, source: any, destination: any, nodes?: Array<Node>): Array<Node> {
   buildStructure(obj: any, source: any, destination: any, sourceNode?: Array<Node>, destinationNode?: Array<Node>) {
 
     sourceNode = sourceNode || new Array<Node>();
@@ -46,7 +44,8 @@ export class HomeComponent implements OnInit {
         // debugger;
         if (typeof property === 'object') {
 
-          let status: TreeStatus = null;
+          let destinationStatus: TreeStatus = null;
+          let sourceStatus: TreeStatus = null;
 
           const sourceExists = _.has(source, key);
           const destinationExists = _.has(destination, key);
@@ -55,11 +54,11 @@ export class HomeComponent implements OnInit {
           const destinationValue = destination[key];
 
           if (destinationExists && !sourceExists) {
-            status = TreeStatus.ADDED;
+            destinationStatus = TreeStatus.ADDED;
           } else if (sourceExists && destinationExists && sourceValue && destinationValue && sourceValue !== destinationValue) {
-            status = TreeStatus.CHANGED;
+            destinationStatus = TreeStatus.CHANGED;
           } else if (sourceExists && !destinationExists) {
-            status = TreeStatus.DELETED
+            sourceStatus = TreeStatus.DELETED
           }
 
           const children = this.buildStructure(property, sourceValue, destinationValue);
@@ -67,12 +66,15 @@ export class HomeComponent implements OnInit {
           const sourceChildren = children.sourceNode;
           const destinationChildren = children.destinationNode;
 
-          sourceNode.push(new Node(key, sourceChildren));
-          destinationNode.push(new Node(key, destinationChildren, status));
+          sourceNode.push(new Node(key, sourceChildren, sourceStatus));
+          destinationNode.push(new Node(key, destinationChildren, destinationStatus));
 
+        } else if (Array.isArray(property)) {
+          debugger;
         } else {
-
-          let status: TreeStatus = null;
+          debugger;
+          let destinationStatus: TreeStatus = null;
+          let sourceStatus: TreeStatus = null;
 
           const sourceExists = _.has(source, key);
           const destinationExists = _.has(destination, key);
@@ -81,17 +83,20 @@ export class HomeComponent implements OnInit {
           const destinationValue = destination[key];
 
           if (destinationExists && !sourceExists) {
-            status = TreeStatus.ADDED;
+            destinationStatus = TreeStatus.ADDED;
           } else if (sourceExists && destinationExists && sourceValue && destinationValue && sourceValue !== destinationValue) {
-            status = TreeStatus.CHANGED;
+            destinationStatus = TreeStatus.CHANGED;
           } else if (sourceExists && !destinationExists) {
-            status = TreeStatus.DELETED
+            sourceStatus = TreeStatus.DELETED
           }
 
-          sourceNode.push(new Node({ [key]: sourceValue }));
-          destinationNode.push(new Node({ [key]: destinationValue }, null, status));
+          if (destinationStatus !== TreeStatus.ADDED) {
+            sourceNode.push(new Node({ [key]: sourceValue }, null, sourceStatus));
+          }
 
-          // nodes.push(new Node({ [key]: property }, null, status));
+          if (sourceStatus !== TreeStatus.DELETED) {
+            destinationNode.push(new Node({ [key]: destinationValue }, null, destinationStatus));
+          }
         }
       });
 
